@@ -65,6 +65,9 @@ RUN mise install \
   && mise exec -- codex --version \
   && mise exec -- claude --version
 
+# Install agent-browser dependencies (Chromium + system deps)
+RUN mise exec -- agent-browser install --with-deps
+
 # Ensure mise shims are on PATH for runtime
 ENV PATH="/root/.local/share/mise/shims:${PATH}"
 
