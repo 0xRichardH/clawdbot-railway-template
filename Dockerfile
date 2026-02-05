@@ -89,8 +89,6 @@ ENV PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:${PATH}
 
 # Install common dev tools via Homebrew
 RUN brew install \
-    git \
-    curl \
     wget \
     jq \
     yq \
