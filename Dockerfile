@@ -42,12 +42,16 @@ RUN pnpm ui:install && pnpm ui:build
 FROM node:22-bookworm
 ENV NODE_ENV=production
 
+# Install all system dependencies in a single layer
 RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \
     git \
     xz-utils \
+    build-essential \
+    procps \
+    file \
   && rm -rf /var/lib/apt/lists/*
 
 # Install mise
@@ -65,8 +69,37 @@ RUN mise install \
   && mise exec -- codex --version \
   && mise exec -- claude --version
 
+# Install agent-browser dependencies (Chromium + system deps)
+RUN mise exec -- agent-browser install --with-deps
+
 # Ensure mise shims are on PATH for runtime
 ENV PATH="/root/.local/share/mise/shims:${PATH}"
+
+# Create linuxbrew user and install Homebrew
+RUN useradd -m -s /bin/bash linuxbrew \
+  && mkdir -p /home/linuxbrew/.linuxbrew \
+  && chown -R linuxbrew:linuxbrew /home/linuxbrew
+
+# Install Homebrew as linuxbrew user
+USER linuxbrew
+RUN /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Add Homebrew to PATH for all users
+ENV PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:${PATH}"
+
+# Install common dev tools via Homebrew (as linuxbrew user)
+RUN brew install \
+    wget \
+    jq \
+    yq \
+    ripgrep \
+    fd \
+    fzf \
+  && brew cleanup \
+  && brew --version
+
+# Switch back to root for remaining setup
+USER root
 
 WORKDIR /app
 
