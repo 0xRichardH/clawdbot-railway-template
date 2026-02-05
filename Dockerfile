@@ -81,13 +81,10 @@ RUN useradd -m -s /bin/bash linuxbrew \
 USER linuxbrew
 RUN /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-# Switch back to root for remaining setup
-USER root
-
 # Add Homebrew to PATH for all users
 ENV PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:${PATH}"
 
-# Install common dev tools via Homebrew
+# Install common dev tools via Homebrew (as linuxbrew user)
 RUN brew install \
     wget \
     jq \
@@ -95,10 +92,11 @@ RUN brew install \
     ripgrep \
     fd \
     fzf \
-  && brew cleanup
+  && brew cleanup \
+  && brew --version
 
-# Verify Homebrew installation
-RUN brew --version && brew doctor || true
+# Switch back to root for remaining setup
+USER root
 
 WORKDIR /app
 
