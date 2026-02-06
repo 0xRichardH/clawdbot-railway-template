@@ -28,12 +28,20 @@ if [ -n "$TAILSCALE_AUTHKEY" ]; then
     echo "[tailscale] HTTP proxy available at localhost:1056"
 
     # Make proxy vars available to interactive shells (railway ssh)
-    if [ ! -f /etc/profile.d/tailscale-proxy.sh ]; then
-        cat <<'EOF' > /etc/profile.d/tailscale-proxy.sh
+    # Create a sourceable script in /usr/local/bin and source it from bashrc
+    if [ ! -f /usr/local/bin/tailscale-proxy-env ]; then
+        cat <<'EOF' > /usr/local/bin/tailscale-proxy-env
+# Tailscale HTTP proxy for accessing other tailnet nodes
 export HTTP_PROXY="http://localhost:1056"
 export HTTPS_PROXY="http://localhost:1056"
 export NO_PROXY="localhost,127.0.0.1"
 EOF
+        chmod +r /usr/local/bin/tailscale-proxy-env
+    fi
+
+    # Auto-source for interactive shells
+    if ! grep -q "tailscale-proxy-env" /etc/bash.bashrc 2>/dev/null; then
+        echo '. /usr/local/bin/tailscale-proxy-env' >> /etc/bash.bashrc 2>/dev/null || true
     fi
 else
     echo "[tailscale] TAILSCALE_AUTHKEY not set, skipping Tailscale connection."
