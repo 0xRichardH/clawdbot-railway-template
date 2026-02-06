@@ -95,6 +95,9 @@ RUN brew install \
     ripgrep \
     fd \
     fzf \
+    gh \
+    vim \
+    tmux \
   && brew cleanup \
   && brew --version
 
